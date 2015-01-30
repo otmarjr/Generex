@@ -34,6 +34,7 @@ import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * A Java utility class that help generating string values that match a given
@@ -259,8 +260,11 @@ public class Generex implements Iterable {
         FindAllPaths<State> findAllPaths = new FindAllPaths<State>(automatonGraph);
 
         Set<String> acceptedStrings = new HashSet<String>();
+        List<List<State>> allPaths = new LinkedList<List<State>>();
+        List<List<State>> newPathsWithSelfLoops = new LinkedList<List<State>>();
+        List<List<State>> pathsWithoutCycles = null;
+
         for (State accst : automaton.getAcceptStates()) {
-            List<List<State>> pathsWithoutCycles = null;
 
             if (accst.equals(automaton.getInitialState())) {
                 // Choose another accepting state:
@@ -305,7 +309,49 @@ public class Generex implements Iterable {
                     }
                 }
             }
-            List<List<State>> newPathsWithCycle = new LinkedList<List<State>>();
+            
+            boolean allStatesInPathWithoutCycle = pathsWithoutCycles.stream().anyMatch(path -> path.containsAll(automaton.getStates()));
+            
+            while (!allStatesInPathWithoutCycle){
+                final List<List<State>> simplePathsEndingInCurrentAccSt;
+                simplePathsEndingInCurrentAccSt = new LinkedList<>(pathsWithoutCycles);
+                // Acceptance is done before getting to some of the nodes!
+                Set<State> statesMissingInPath = automaton.getStates().stream()
+                        .filter(s -> simplePathsEndingInCurrentAccSt.stream().allMatch(path -> !path.contains(s)))
+                        .collect(Collectors.toSet());
+                
+                List<List<State>> newCycles = new LinkedList<>();
+                
+                for (State missingST : statesMissingInPath){
+                    List<List<State>> fromAccStToState = findAllPaths.getAllPaths(accst, missingST);
+                    List<List<State>> fromMissingToAccst = findAllPaths.getAllPaths(missingST,accst);
+                    
+                    for (List<State> beforeMissingSt : fromAccStToState){
+                        for (List<State> backToAccSt : fromMissingToAccst){
+                            List<State> cycleAfterAccstCoveringMissingSt;
+                            cycleAfterAccstCoveringMissingSt = new LinkedList<>();
+                            cycleAfterAccstCoveringMissingSt.addAll(beforeMissingSt.subList(0, beforeMissingSt.size()-1));
+                            cycleAfterAccstCoveringMissingSt.addAll(backToAccSt);
+                            newCycles.add(cycleAfterAccstCoveringMissingSt);
+                        }
+                    }
+                }
+                
+                List<List<State>> newSimplePaths = new LinkedList<>();
+                
+                for (List<State> path : pathsWithoutCycles){
+                    for (List<State> cycle : newCycles){
+                        List<State> newCyclicPath = new LinkedList<>();
+                        newCyclicPath.addAll(path.subList(0, path.size()-1));
+                        newCyclicPath.addAll(cycle);
+                        newSimplePaths.add(newCyclicPath);
+                    }
+                }
+                pathsWithoutCycles.addAll(newSimplePaths);
+                
+                allStatesInPathWithoutCycle = pathsWithoutCycles.stream().anyMatch(path -> path.containsAll(automaton.getStates()));
+            }
+
             /*
              Expand allPaths with one loop iteration occuring.
              */
@@ -333,78 +379,89 @@ public class Generex implements Iterable {
                         }
 
                         if (!statesToBeAdded.isEmpty()) {
-                            List<State> newPathWithCycle = new LinkedList<State>(path);
+                            List<State> newPathWithSelfLoops = new LinkedList<State>(path);
 
                             while (!statesToBeAdded.isEmpty()) {
                                 State sl = statesToBeAdded.get(0);
-                                newPathWithCycle.add(newPathWithCycle.indexOf(sl), sl);
+                                int matches =0;
+                                List<Integer> toInsertIndexes = new LinkedList<>();
+                                
+                                for (int k=0;k<newPathWithSelfLoops.size();k++){
+                                    if (newPathWithSelfLoops.get(k).equals(sl)){
+                                        toInsertIndexes.add(k+matches);
+                                        matches++;
+                                    }
+                                }
+                                
+                                toInsertIndexes.stream().forEach((k) -> {
+                                    newPathWithSelfLoops.add(k, sl);
+                                });
+                                
                                 statesToBeAdded.remove(sl);
                             }
 
-                            newPathsWithCycle.add(newPathWithCycle);
+                            newPathsWithSelfLoops.add(newPathWithSelfLoops);
                         }
                     }
                 }
 
             }
-            List<List<State>> allPaths = new LinkedList<List<State>>();
 
             allPaths.addAll(pathsWithoutCycles);
-            allPaths.addAll(newPathsWithCycle);
-
-            for (List<State> path : allPaths) {
-
-                State previousState = null;
-                List<String> previousStateExpressions = null;
-
-                List<String> expressions = new LinkedList<String>();
-
-                for (State s : path) {
-                    if (previousState != null) {
-                        expressions = new LinkedList<String>(previousStateExpressions);
-
-                        List<String> newlyAddedExpressions = new LinkedList<String>(); // tracks down which expresions were created between previous state and the current one
-
-                        for (Transition t : previousState.getTransitions()) {
-                            if (t.getDest().equals(s)) {
-
-                                if (expressions.isEmpty()) {
-                                    String expr = Character.toString(t.getMin()).trim();
-                                    newlyAddedExpressions.add(expr);
-                                    expressions.add(expr);
-                                } else {
-                                    expressions.clear();
-                                    if (!newlyAddedExpressions.isEmpty()) {
-                                        expressions.addAll(newlyAddedExpressions);
-                                    }
-
-                                    if (previousStateExpressions != null && previousStateExpressions.isEmpty()) {
-                                        String expr = Character.toString(t.getMin()).trim();
-                                        //newlyAddedExpressions.add(expr);
-                                        expressions.add(expr);
-                                    } else {
-                                        for (String prevExpr : previousStateExpressions) {
-                                            String newExp = prevExpr;
-                                            newExp += Character.toString(t.getMin()).trim();
-                                            newlyAddedExpressions.add(newExp);
-                                            expressions.add(newExp);
-                                        }
-                                    }
-
-                                }
-                            }
-                        }
-
-                    }
-
-                    previousState = s;
-                    previousStateExpressions = expressions;
-
-                }
-                acceptedStrings.addAll(expressions);
-            }
+            allPaths.addAll(newPathsWithSelfLoops);
         }
 
+        for (List<State> path : allPaths) {
+
+            State previousState = null;
+            List<String> previousStateExpressions = null;
+
+            List<String> expressions = new LinkedList<String>();
+
+            for (State s : path) {
+                if (previousState != null) {
+                    expressions = new LinkedList<String>(previousStateExpressions);
+
+                    List<String> newlyAddedExpressions = new LinkedList<String>(); // tracks down which expresions were created between previous state and the current one
+
+                    for (Transition t : previousState.getTransitions()) {
+                        if (t.getDest().equals(s)) {
+
+                            if (expressions.isEmpty()) {
+                                String expr = Character.toString(t.getMin()).trim();
+                                newlyAddedExpressions.add(expr);
+                                expressions.add(expr);
+                            } else {
+                                expressions.clear();
+                                if (!newlyAddedExpressions.isEmpty()) {
+                                    expressions.addAll(newlyAddedExpressions);
+                                }
+
+                                if (previousStateExpressions != null && previousStateExpressions.isEmpty()) {
+                                    String expr = Character.toString(t.getMin()).trim();
+                                    //newlyAddedExpressions.add(expr);
+                                    expressions.add(expr);
+                                } else {
+                                    for (String prevExpr : previousStateExpressions) {
+                                        String newExp = prevExpr;
+                                        newExp += Character.toString(t.getMin()).trim();
+                                        newlyAddedExpressions.add(newExp);
+                                        expressions.add(newExp);
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+
+                }
+
+                previousState = s;
+                previousStateExpressions = expressions;
+
+            }
+            acceptedStrings.addAll(expressions);
+        }
         return acceptedStrings;
     }
 

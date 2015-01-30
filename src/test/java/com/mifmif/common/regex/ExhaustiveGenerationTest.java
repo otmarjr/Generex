@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -50,6 +51,7 @@ public class ExhaustiveGenerationTest {
         @Test
         public void testJavaMopCasesForJavaUtil(){
             
+            Set<String> actuallyAbsent;
             ConvenienceRegexTesting test =  new ConvenienceRegexTesting("cu*m+u", Arrays.asList("cmu", "cumu", "cmmu", "cummu"));
             Assert.assertEquals(test.expectedExamples.size(),test.actualExamples.size());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
@@ -91,6 +93,21 @@ public class ExhaustiveGenerationTest {
             Assert.assertTrue(test.expectedExamples.containsAll(test.actualExamples));
             
             test = new ConvenienceRegexTesting("((n|p)+(r| ))*", Arrays.asList("n", "nn","nr", "nnr", "p","pp", "pr","ppr","np","npr", "pn","pnr"));
+            Assert.assertEquals(test.expectedExamples.size(),test.actualExamples.size());
+            Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
+            Assert.assertTrue(test.expectedExamples.containsAll(test.actualExamples));
+            
+            test = new ConvenienceRegexTesting("ca*", Arrays.asList("c", "ca"));
+            Assert.assertEquals(test.expectedExamples.size(),test.actualExamples.size());
+            Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
+            Assert.assertTrue(test.expectedExamples.containsAll(test.actualExamples));
+            
+            
+            test = new ConvenienceRegexTesting("ca*((n|p)+s*(r|a+| ))*", Arrays.asList("cnnra","cnnr","cnnaa","cnna","cnn","cnpra","cnpr","cnpaa","cnpa","cnp","cnsra","cnsr","cnsaa","cnsa","cns","cnra","cnr","cnaa","cna","cn","cpnra","cpnr","cpnaa","cpna","cpn","cppra","cppr","cppaa","cppa","cpp","cpsra","cpsr","cpsaa","cpsa","cps","cpra","cpr","cpaa","cpa","cp","cannra","cannr","cannaa","canna","cann","canpra","canpr","canpaa","canpa","canp","cansra","cansr","cansaa","cansa","cans","canra","canr","canaa","cana","can","capnra","capnr","capnaa","capna","capn","cappra","cappr","cappaa","cappa","capp","capsra","capsr","capsaa","capsa","caps","capra","capr","capaa","capa","cap"));
+            final Set<String> actualSet = test.actualExamples;
+            
+            actuallyAbsent = test.expectedExamples.stream().filter(expec -> !actualSet.contains(expec)).collect(Collectors.toSet());
+            Assert.assertTrue(actuallyAbsent.isEmpty());
             Assert.assertEquals(test.expectedExamples.size(),test.actualExamples.size());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
             Assert.assertTrue(test.expectedExamples.containsAll(test.actualExamples));

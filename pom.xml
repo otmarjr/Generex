@@ -332,49 +332,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>javancss-maven-plugin</artifactId>
-				<version>2.0-beta-2</version>
-				<configuration>
-					<encoding>${project.build.sourceEncoding}</encoding>
-					<ccnLimit>10</ccnLimit>
-					<ncssLimit>100</ncssLimit>
-					<failOnViolation>true</failOnViolation>
-					<excludes>
-						<exclude>**/tests/**/*.*</exclude>
-					</excludes>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>findbugs-maven-plugin</artifactId>
-				<version>2.5.2</version>
-				<configuration>
-					<encoding>${project.build.sourceEncoding}</encoding>
-					<failOnError>true</failOnError>
-					<excludeFilterFile>findBugsExclude.xml</excludeFilterFile>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>jdepend-maven-plugin</artifactId>
-				<version>2.0</version>
-			</plugin>
 		</plugins>
 	</build>
 	<dependencies>

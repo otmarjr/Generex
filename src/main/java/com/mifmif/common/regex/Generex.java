@@ -309,46 +309,46 @@ public class Generex implements Iterable {
                     }
                 }
             }
-            
+
             boolean allStatesInPathWithoutCycle = pathsWithoutCycles.stream().anyMatch(path -> path.containsAll(automaton.getStates()));
-            
-            while (!allStatesInPathWithoutCycle){
+
+            while (!allStatesInPathWithoutCycle) {
                 final List<List<State>> simplePathsEndingInCurrentAccSt;
                 simplePathsEndingInCurrentAccSt = new LinkedList<>(pathsWithoutCycles);
                 // Acceptance is done before getting to some of the nodes!
                 Set<State> statesMissingInPath = automaton.getStates().stream()
                         .filter(s -> simplePathsEndingInCurrentAccSt.stream().allMatch(path -> !path.contains(s)))
                         .collect(Collectors.toSet());
-                
+
                 List<List<State>> newCycles = new LinkedList<>();
-                
-                for (State missingST : statesMissingInPath){
+
+                for (State missingST : statesMissingInPath) {
                     List<List<State>> fromAccStToState = findAllPaths.getAllPaths(accst, missingST);
-                    List<List<State>> fromMissingToAccst = findAllPaths.getAllPaths(missingST,accst);
-                    
-                    for (List<State> beforeMissingSt : fromAccStToState){
-                        for (List<State> backToAccSt : fromMissingToAccst){
+                    List<List<State>> fromMissingToAccst = findAllPaths.getAllPaths(missingST, accst);
+
+                    for (List<State> beforeMissingSt : fromAccStToState) {
+                        for (List<State> backToAccSt : fromMissingToAccst) {
                             List<State> cycleAfterAccstCoveringMissingSt;
                             cycleAfterAccstCoveringMissingSt = new LinkedList<>();
-                            cycleAfterAccstCoveringMissingSt.addAll(beforeMissingSt.subList(0, beforeMissingSt.size()-1));
+                            cycleAfterAccstCoveringMissingSt.addAll(beforeMissingSt.subList(0, beforeMissingSt.size() - 1));
                             cycleAfterAccstCoveringMissingSt.addAll(backToAccSt);
                             newCycles.add(cycleAfterAccstCoveringMissingSt);
                         }
                     }
                 }
-                
+
                 List<List<State>> newSimplePaths = new LinkedList<>();
-                
-                for (List<State> path : pathsWithoutCycles){
-                    for (List<State> cycle : newCycles){
+
+                for (List<State> path : pathsWithoutCycles) {
+                    for (List<State> cycle : newCycles) {
                         List<State> newCyclicPath = new LinkedList<>();
-                        newCyclicPath.addAll(path.subList(0, path.size()-1));
+                        newCyclicPath.addAll(path.subList(0, path.size() - 1));
                         newCyclicPath.addAll(cycle);
                         newSimplePaths.add(newCyclicPath);
                     }
                 }
                 pathsWithoutCycles.addAll(newSimplePaths);
-                
+
                 allStatesInPathWithoutCycle = pathsWithoutCycles.stream().anyMatch(path -> path.containsAll(automaton.getStates()));
             }
 
@@ -371,10 +371,21 @@ public class Generex implements Iterable {
 
                     List<State> statesToBeAdded = new LinkedList<State>();
 
+                    Map<State, List<Integer>> statePositionOcurrences = new HashMap<>();
                     for (int i = 0; i < C; i++) {
                         for (int j = 0; j < cyclicStatesToBeAddedInThisPath.size(); j++) {
                             if (BigInteger.valueOf(i).testBit(j)) { // j-th position of permutation C indicates if this state should participate!
-                                statesToBeAdded.add(cyclicStatesToBeAddedInThisPath.get(j));
+                                State sj = cyclicStatesToBeAddedInThisPath.get(j);
+                                statesToBeAdded.add(sj);
+
+                                for (int k = 0; k < path.size(); k++) {
+                                    if (path.get(k).equals(sj)) {
+                                        if (!statePositionOcurrences.containsKey(sj)) {
+                                            statePositionOcurrences.put(sj, new LinkedList<>());
+                                        }
+                                        statePositionOcurrences.get(sj).add(k);
+                                    }
+                                }
                             }
                         }
 
@@ -383,20 +394,20 @@ public class Generex implements Iterable {
 
                             while (!statesToBeAdded.isEmpty()) {
                                 State sl = statesToBeAdded.get(0);
-                                int matches =0;
+                                int matches = 0;
                                 List<Integer> toInsertIndexes = new LinkedList<>();
-                                
-                                for (int k=0;k<newPathWithSelfLoops.size();k++){
-                                    if (newPathWithSelfLoops.get(k).equals(sl)){
-                                        toInsertIndexes.add(k+matches);
+
+                                for (int k = 0; k < newPathWithSelfLoops.size(); k++) {
+                                    if (newPathWithSelfLoops.get(k).equals(sl)) {
+                                        toInsertIndexes.add(k + matches);
                                         matches++;
                                     }
                                 }
-                                
+
                                 toInsertIndexes.stream().forEach((k) -> {
                                     newPathWithSelfLoops.add(k, sl);
                                 });
-                                
+
                                 statesToBeAdded.remove(sl);
                             }
 

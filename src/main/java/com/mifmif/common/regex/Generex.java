@@ -369,9 +369,12 @@ public class Generex implements Iterable {
                     // to incorporate all possible combinations!
                     int C = (int) Math.pow(2, cyclicStatesToBeAddedInThisPath.size());
 
-                    List<State> statesToBeAdded = new LinkedList<State>();
+                    Set<State> statesToBeAdded = new HashSet<State>();
 
                     Map<State, List<Integer>> statePositionOcurrences = new HashMap<>();
+                    int numberOfRepetitions = 0;
+                    Set<Integer> toRepeatIndexes = new HashSet<>();
+                    
                     for (int i = 0; i < C; i++) {
                         for (int j = 0; j < cyclicStatesToBeAddedInThisPath.size(); j++) {
                             if (BigInteger.valueOf(i).testBit(j)) { // j-th position of permutation C indicates if this state should participate!
@@ -384,11 +387,30 @@ public class Generex implements Iterable {
                                             statePositionOcurrences.put(sj, new LinkedList<>());
                                         }
                                         statePositionOcurrences.get(sj).add(k);
+                                        numberOfRepetitions++;
+                                        toRepeatIndexes.add(k);
+                                        
                                     }
                                 }
                             }
                         }
+                        
+                        int INDEXES_REPETITIONS = (int)Math.pow(2, numberOfRepetitions);
+                        for (int k=0;k<INDEXES_REPETITIONS;k++){
+                            List<State> newPathWithSelfLoops = new LinkedList<State>(path);
+                            LinkedList<Integer> repetitionList = new LinkedList<>(toRepeatIndexes);
+                            int previousAdditionsOffset = 0;
+                            for (int l=0;l<toRepeatIndexes.size();l++){
+                                if (BigInteger.valueOf(k).testBit(l)){
+                                    State toRepeateState = path.get(repetitionList.get(l));
+                                    newPathWithSelfLoops.add(repetitionList.get(l)+previousAdditionsOffset,toRepeateState);
+                                    previousAdditionsOffset++;
+                                }
+                            }
+                            newPathsWithSelfLoops.add(newPathWithSelfLoops);
+                        }
 
+                        /*
                         if (!statesToBeAdded.isEmpty()) {
                             List<State> newPathWithSelfLoops = new LinkedList<State>(path);
 
@@ -412,7 +434,7 @@ public class Generex implements Iterable {
                             }
 
                             newPathsWithSelfLoops.add(newPathWithSelfLoops);
-                        }
+                        }*/
                     }
                 }
 

@@ -46,6 +46,12 @@ public class ExhaustiveGenerationTest {
             
             
             public Set<String> actualExamples;
+            
+            public Set<String> actuallyAbsent(){
+                final Set<String> actualSet = actualExamples;
+            
+                return expectedExamples.stream().filter(expec -> !actualSet.contains(expec)).collect(Collectors.toSet());
+            }
         }
         
         @Test
@@ -53,54 +59,44 @@ public class ExhaustiveGenerationTest {
             
             Set<String> actuallyAbsent;
             ConvenienceRegexTesting test =  new ConvenienceRegexTesting("cu*m+u", Arrays.asList("cmu", "cumu", "cmmu", "cummu"));
-            Assert.assertEquals(test.expectedExamples.size(),test.actualExamples.size());
+            Assert.assertTrue(test.actuallyAbsent().isEmpty());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
-            Assert.assertTrue(test.expectedExamples.containsAll(test.actualExamples));
             
             test =  new ConvenienceRegexTesting("b|(ca)", Arrays.asList("b", "ca"));
-            Assert.assertEquals(test.expectedExamples.size(),test.actualExamples.size());
+            Assert.assertTrue(test.actuallyAbsent().isEmpty());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
-            Assert.assertTrue(test.expectedExamples.containsAll(test.actualExamples));
             
             test =  new ConvenienceRegexTesting("(ab)|(acd)", Arrays.asList("ab", "acd"));
-            Assert.assertEquals(test.expectedExamples.size(),test.actualExamples.size());
+            Assert.assertTrue(test.actuallyAbsent().isEmpty());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
-            Assert.assertTrue(test.expectedExamples.containsAll(test.actualExamples));
             
             test =  new ConvenienceRegexTesting("ab(c|(de))", Arrays.asList("abc", "abde"));
-            Assert.assertEquals(test.expectedExamples.size(),test.actualExamples.size());
+            Assert.assertTrue(test.actuallyAbsent().isEmpty());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
-            Assert.assertTrue(test.expectedExamples.containsAll(test.actualExamples));
             
             test =  new ConvenienceRegexTesting("(elm*)*", Arrays.asList("el", "elm"));
-            Assert.assertEquals(test.expectedExamples.size(),test.actualExamples.size());
+            Assert.assertTrue(test.actuallyAbsent().isEmpty());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
-            Assert.assertTrue(test.expectedExamples.containsAll(test.actualExamples));
             
             test = new ConvenienceRegexTesting("ca+", Arrays.asList("ca", "caa"));
-            Assert.assertEquals(test.expectedExamples.size(),test.actualExamples.size());
+            Assert.assertTrue(test.actuallyAbsent().isEmpty());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
-            Assert.assertTrue(test.expectedExamples.containsAll(test.actualExamples));
             
             test = new ConvenienceRegexTesting("u", Arrays.asList("u"));
-            Assert.assertEquals(test.expectedExamples.size(),test.actualExamples.size());
+            Assert.assertTrue(test.actuallyAbsent().isEmpty());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
-            Assert.assertTrue(test.expectedExamples.containsAll(test.actualExamples));
             
             test = new ConvenienceRegexTesting("(n+(r| ))*", Arrays.asList("nr", "nnr", "nn", "n"));
-            Assert.assertEquals(test.expectedExamples.size(),test.actualExamples.size());
+            Assert.assertTrue(test.actuallyAbsent().isEmpty());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
-            Assert.assertTrue(test.expectedExamples.containsAll(test.actualExamples));
             
             test = new ConvenienceRegexTesting("((n|p)+(r| ))*", Arrays.asList("n", "nn","nr", "nnr", "p","pp", "pr","ppr","np","npr", "pn","pnr"));
-            Assert.assertEquals(test.expectedExamples.size(),test.actualExamples.size());
+            Assert.assertTrue(test.actuallyAbsent().isEmpty());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
-            Assert.assertTrue(test.expectedExamples.containsAll(test.actualExamples));
             
             test = new ConvenienceRegexTesting("ca*", Arrays.asList("c", "ca"));
-            Assert.assertEquals(test.expectedExamples.size(),test.actualExamples.size());
+            Assert.assertTrue(test.actuallyAbsent().isEmpty());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
-            Assert.assertTrue(test.expectedExamples.containsAll(test.actualExamples));
             
             
             test = new ConvenienceRegexTesting("ca*((n|p)+s*(r|a+| ))*", Arrays.asList("cnnra","cnnr","cnnaa","cnna","cnn","cnpra","cnpr","cnpaa","cnpa","cnp","cnsra","cnsr","cnsaa","cnsa","cns","cnra","cnr","cnaa","cna","cn","cpnra","cpnr","cpnaa","cpna","cpn","cppra","cppr","cppaa","cppa","cpp","cpsra","cpsr","cpsaa","cpsa","cps","cpra","cpr","cpaa","cpa","cp","cannra","cannr","cannaa","canna","cann","canpra","canpr","canpaa","canpa","canp","cansra","cansr","cansaa","cansa","cans","canra","canr","canaa","cana","can","capnra","capnr","capnaa","capna","capn","cappra","cappr","cappaa","cappa","capp","capsra","capsr","capsaa","capsa","caps","capra","capr","capaa","capa","cap"));
@@ -108,8 +104,6 @@ public class ExhaustiveGenerationTest {
             
             actuallyAbsent = test.expectedExamples.stream().filter(expec -> !actualSet.contains(expec)).collect(Collectors.toSet());
             Assert.assertTrue(actuallyAbsent.isEmpty());
-            Assert.assertEquals(test.expectedExamples.size(),test.actualExamples.size());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
-            Assert.assertTrue(test.expectedExamples.containsAll(test.actualExamples));
         }
 }

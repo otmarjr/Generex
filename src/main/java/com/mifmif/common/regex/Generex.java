@@ -372,10 +372,11 @@ public class Generex implements Iterable {
                     Set<State> statesToBeAdded = new HashSet<State>();
 
                     Map<State, List<Integer>> statePositionOcurrences = new HashMap<>();
-                    int numberOfRepetitions = 0;
+                    
                     Set<Integer> toRepeatIndexes = new HashSet<>();
                     
                     for (int i = 0; i < C; i++) {
+                        int numberOfRepetitions = 0;
                         for (int j = 0; j < cyclicStatesToBeAddedInThisPath.size(); j++) {
                             if (BigInteger.valueOf(i).testBit(j)) { // j-th position of permutation C indicates if this state should participate!
                                 State sj = cyclicStatesToBeAddedInThisPath.get(j);

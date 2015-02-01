@@ -56,7 +56,7 @@ public class ExhaustiveGenerationTest {
            
         }
         
-        //@Test
+        @Test
         public void testJavaMopCasesForJavaUtil(){
             ConvenienceRegexTesting test =  new ConvenienceRegexTesting("cu*m+u", Arrays.asList("cmu", "cumu", "cmmu", "cummu"));
             Assert.assertTrue(test.actuallyAbsent.isEmpty());
@@ -114,7 +114,7 @@ public class ExhaustiveGenerationTest {
             Assert.assertTrue(test.actuallyAbsent.isEmpty());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
             
-            test = new ConvenienceRegexTesting("c(x|y)*(g|h)(x|y|z)*iu*(x|y|z)+u", Arrays.asList(""));
+            test = new ConvenienceRegexTesting("c(x|y)*(g|h)(x|y|z)*iu*(x|y|z)+u", Arrays.asList("cgixu","chixu","cgiyu","chiyu","cgizu","chizu","cxgixu","cxhixu","cxgiyu","cxhiyu","cxgizu","cxhizu","cygixu","cyhixu","cygiyu","cyhiyu","cygizu","cyhizu","cgixu","chixu","cgiyu","chiyu","cgizu","chizu","cxgixu","cxhixu","cxgiyu","cxhiyu","cxgizu","cxhizu","cygixu","cyhixu","cygiyu","cyhiyu","cygizu","cyhizu","cgxixu","chxixu","cgxiyu","chxiyu","cgxizu","chxizu","cxgxixu","cxhxixu","cxgxiyu","cxhxiyu","cxgxizu","cxhxizu","cygxixu","cyhxixu","cygxiyu","cyhxiyu","cygxizu","cyhxizu","cgyixu","chyixu","cgyiyu","chyiyu","cgyizu","chyizu","cxgyixu","cxhyixu","cxgyiyu","cxhyiyu","cxgyizu","cxhyizu","cygyixu","cyhyixu","cygyiyu","cyhyiyu","cygyizu","cyhyizu","cgzixu","chzixu","cgziyu","chziyu","cgzizu","chzizu","cxgzixu","cxhzixu","cxgziyu","cxhziyu","cxgzizu","cxhzizu","cygzixu","cyhzixu","cygziyu","cyhziyu","cygzizu","cyhzizu"));
             Assert.assertTrue(test.actuallyAbsent.isEmpty());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
         }

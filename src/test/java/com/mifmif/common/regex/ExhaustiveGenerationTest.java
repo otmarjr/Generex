@@ -15,10 +15,12 @@
  */
 package com.mifmif.common.regex;
 
+import dk.brics.automaton.Transition;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,12 +43,13 @@ public class ExhaustiveGenerationTest {
             
             void run(){
                 Generex g = new Generex(this.regex);
-                this.actualExamples = g.getAllMatchedStringsViaAllPaths();
+                this.actualExamples = g.getAllMatchedStringsViaAllPermutations();
+                
                 final Set<String> actualSet = actualExamples;
                 actuallyAbsent = expectedExamples.stream().filter(expec -> !actualSet.contains(expec)).collect(Collectors.toSet());
             }
             
-            
+                
             public Set<String> actualExamples;
             
             public Set<String> actuallyAbsent;
@@ -55,8 +58,6 @@ public class ExhaustiveGenerationTest {
         
         @Test
         public void testJavaMopCasesForJavaUtil(){
-            
-            Set<String> actuallyAbsent;
             ConvenienceRegexTesting test =  new ConvenienceRegexTesting("cu*m+u", Arrays.asList("cmu", "cumu", "cmmu", "cummu"));
             Assert.assertTrue(test.actuallyAbsent.isEmpty());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
@@ -97,8 +98,23 @@ public class ExhaustiveGenerationTest {
             Assert.assertTrue(test.actuallyAbsent.isEmpty());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
             
-            
             test = new ConvenienceRegexTesting("ca*((n|p)+s*(r|a+| ))*", Arrays.asList("cnnr","cnnaa","cnna","cnn","cnpr","cnpaa","cnpa","cnp","cnsr","cnsaa","cnsa","cns","cnr","cnaa","cna","cn","cpnr","cpnaa","cpna","cpn","cppr","cppaa","cppa","cpp","cpsr","cpsaa","cpsa","cps","cpr","cpaa","cpa","cp","cannr","cannaa","canna","cann","canpr","canpaa","canpa","canp","cansr","cansaa","cansa","cans","canr","canaa","cana","can","capnr","capnaa","capna","capn","cappr","cappaa","cappa","capp","capsr","capsaa","capsa","caps","capr","capaa","capa","cap"));
+            Assert.assertTrue(test.actuallyAbsent.isEmpty());
+            Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
+            
+            test = new ConvenienceRegexTesting("ga+", Arrays.asList("ga","gaa"));
+            Assert.assertTrue(test.actuallyAbsent.isEmpty());
+            Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
+            
+            test = new ConvenienceRegexTesting("g(m|c)*iu*(m|c)+u", Arrays.asList("gimu","gicu","gimmu","giccu","gimcu","gicmu","giumu","giucu","giummu","giuccu","giumcu","giucmu","gcimu","gcicu","gcimmu","gciccu","gcimcu","gcicmu","gciumu","gciucu","gciummu","gciuccu","gciumcu","gciucmu","gmimu","gmicu","gmimmu","gmiccu","gmimcu","gmicmu","gmiumu","gmiucu","gmiummu","gmiuccu","gmiumcu","gmiucmu"));
+            Assert.assertTrue(test.actuallyAbsent.isEmpty());
+            Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
+            
+            test = new ConvenienceRegexTesting("(elm*)*", Arrays.asList("el","elm"));
+            Assert.assertTrue(test.actuallyAbsent.isEmpty());
+            Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
+            
+            test = new ConvenienceRegexTesting("c(x|y)*(g|h)(x|y|z)*iu*(x|y|z)+u", Arrays.asList(""));
             Assert.assertTrue(test.actuallyAbsent.isEmpty());
             Assert.assertTrue(test.actualExamples.containsAll(test.expectedExamples));
         }

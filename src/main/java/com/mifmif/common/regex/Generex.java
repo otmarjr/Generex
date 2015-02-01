@@ -35,6 +35,9 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.collections4.Bag;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.bag.TreeBag;
 
 /**
  * A Java utility class that help generating string values that match a given
@@ -237,6 +240,199 @@ public class Generex implements Iterable {
         return matchedStrings;
 
     }
+    private List<List<Transition>> transitionsPowerSet;
+
+    private void loadTransitionsPowerSet() {
+        int n = this.getAllTransitionsList().size();
+
+        int MASK = (int) Math.pow(2, n);
+
+        this.transitionsPowerSet = new LinkedList<>();
+
+        for (int i = 0; i < MASK; i++) {
+            List<Transition> subset = new LinkedList<>();
+            for (int j = 0; j < n; j++) {
+                if (BigInteger.valueOf(i).testBit(j)) {
+                    subset.add(this.getAllTransitionsList().get(j));
+                }
+            }
+            this.transitionsPowerSet.add(subset);
+        }
+
+    }
+
+    private List<List<Transition>> getTransitionsPowerSet() {
+        if (transitionsPowerSet == null) {
+            this.loadTransitionsPowerSet();
+        }
+        return this.transitionsPowerSet;
+    }
+
+    List<List<Transition>> allPermutations;
+    
+    private void loadAllPermutationsOfSize(int size) {
+        List<List<Transition>> allSubsetsOfGivenSize = this.getTransitionsPowerSet()
+                .stream()
+                .filter(subset -> subset.size() == size)
+                .collect(Collectors.toList());
+
+
+        allSubsetsOfGivenSize.stream().forEach((set) -> {
+            this.allPermutations.addAll(CollectionUtils.permutations(set));
+        });
+
+    }
+
+    private List<List<Transition>> getAllPermutations() {
+        this.allPermutations = new LinkedList<>();
+
+        for (int i = 1; i <= this.getAllTransitionsList().size(); i++) {
+            loadAllPermutationsOfSize(i);
+        }
+
+        return this.allPermutations;
+    }
+
+    private boolean existsTransitionFromPreviousToCurrent(Transition previous, Transition current) {
+        return previous.getDest().getTransitions().contains(current);
+    }
+
+    public Set<String> getAllMatchedStringsViaAllPermutations() {
+        List<List<Transition>> allAcceptedPerms = this.getAllFeasiblePermutations();
+
+        return allAcceptedPerms.stream()
+                .map(list -> list.stream().map(t -> Character.toString(t.getMin()).trim())
+                        .collect(Collectors.joining("")))
+                .collect(Collectors.toSet());
+    }
+
+    private boolean listOfTransitionsIsFeasible(List<Transition> list) {
+
+        Transition lastTransition = null;
+
+        for (Transition t : list) {
+            if (lastTransition == null) {
+                if (!this.getTransitionSource(t).equals(automaton.getInitialState())) {
+                    return false;
+                }
+            } else {
+                if (!existsTransitionFromPreviousToCurrent(lastTransition, t)) {
+                    return false;
+                }
+            }
+            lastTransition = t;
+        }
+
+        return automaton.getAcceptStates().contains(lastTransition.getDest());
+    }
+
+    private String transitionListToString(List<Transition> list){
+        String trans = "";
+        
+         Transition lastTransition = null;
+
+        for (Transition t : list) {
+            State source = getTransitionSource(t);
+            
+            if (lastTransition == null) {
+                if (!this.getTransitionSource(t).equals(automaton.getInitialState())) {
+                    trans += " <VOID> -->  NOT AN INITIAL STATE: " + source.toString();
+                    break;
+                }
+                else{
+                    
+                    trans+= source.toString() + " reading " + t.getMin();
+                }
+            } else {
+                State lastSource = this.getTransitionSource(lastTransition);
+                
+                if (!existsTransitionFromPreviousToCurrent(lastTransition, t)) {
+                    trans += "<VOID> --> NO PATH FROM "  + lastSource.toString() + " to " + lastTransition.getDest().toString() +"after taking transition " + lastTransition.toString() 
+                            + " leading to current source " + source.toString();
+                    break;
+                }
+                else{
+                    trans+= source.toString() + " reading " + t.getMin();
+                }
+            }
+            lastTransition = t;
+        }
+        
+        return trans;
+    }
+    private List<List<Transition>> getAllFeasiblePermutations() {
+        List<List<Transition>> allPerms = this.getAllPermutations();
+
+        List<List<Transition>> permsEmanatiningFromInitialState = allPerms
+                .stream().filter(perm-> perm.size() > 0 && automaton.getInitialState().getTransitions().contains(perm.get(0)))
+                .collect(Collectors.toList());
+        
+        List<List<Transition>> knownGood = permsEmanatiningFromInitialState
+                .stream().filter(perm -> perm.size() == 5)
+                .filter(perm -> automaton.getAcceptStates().contains(perm.get(perm.size()-1).getDest()))
+                .collect(Collectors.toList());
+        
+        return allPerms.stream()
+                .filter(tl -> listOfTransitionsIsFeasible(tl))
+                .collect(Collectors.toList());
+    }
+
+    private State getTransitionSource(Transition t){
+        for (State s : automaton.getStates()){
+            if (s.getTransitions().contains(t))
+                return s;
+        }
+        
+        return null;
+    }
+
+    List<Transition> allTransitionsList;
+
+    public List<Transition> getAllTransitionsList() {
+        if (allTransitionsList == null) {
+            allTransitionsList = automaton.getStates().stream().flatMap(st -> st.getTransitions().stream())
+                    .collect(Collectors.toList());
+        }
+        return allTransitionsList;
+    }
+
+    Set<Transition> allTransitionsSet;
+
+    public Set<Transition> getAllTransitionsSet() {
+        if (allTransitionsSet == null) {
+            this.allTransitionsSet = automaton.getStates().stream().flatMap(st -> st.getTransitions().stream())
+                    .collect(Collectors.toSet());
+
+        }
+        return allTransitionsSet;
+    }
+
+    public List<List<Transition>> permutate(List<Transition> prefix, List<Transition> items) {
+        List<List<Transition>> perms;
+        if (items.isEmpty()) {
+            List<List<Transition>> base = new LinkedList<>();
+            base.add(prefix);
+            return base;
+        } else {
+            perms = new LinkedList<>();
+            for (int i = 0; i < items.size(); i++) {
+                List<Transition> newPrefix = new LinkedList<>(prefix);
+                newPrefix.add(items.get(i));
+                perms.addAll(permutate(newPrefix, items.subList(i + 1, items.size())));
+            }
+            return perms;
+        }
+    }
+
+    public List<List<Transition>> permutateAllTransitions() {
+        List<List<Transition>> perms = new LinkedList<>();
+
+        List<Transition> transitions = automaton.getStates().stream().flatMap(st -> st.getTransitions().stream())
+                .collect(Collectors.toList());
+
+        perms = permutate(new LinkedList<>(), transitions);
+        return perms;
+    }
 
     public Set<String> getAllMatchedStringsViaAllPaths() {
         GraphFindAllPaths<State> automatonGraph = new GraphFindAllPaths<State>();
@@ -372,11 +568,12 @@ public class Generex implements Iterable {
                     Set<State> statesToBeAdded = new HashSet<State>();
 
                     Map<State, List<Integer>> statePositionOcurrences = new HashMap<>();
-                    
+
                     Set<Integer> toRepeatIndexes = new HashSet<>();
-                    
+
                     for (int i = 0; i < C; i++) {
                         int numberOfRepetitions = 0;
+                        statesToBeAdded.clear();
                         for (int j = 0; j < cyclicStatesToBeAddedInThisPath.size(); j++) {
                             if (BigInteger.valueOf(i).testBit(j)) { // j-th position of permutation C indicates if this state should participate!
                                 State sj = cyclicStatesToBeAddedInThisPath.get(j);
@@ -390,21 +587,21 @@ public class Generex implements Iterable {
                                         statePositionOcurrences.get(sj).add(k);
                                         numberOfRepetitions++;
                                         toRepeatIndexes.add(k);
-                                        
+
                                     }
                                 }
                             }
                         }
-                        
-                        int INDEXES_REPETITIONS = (int)Math.pow(2, numberOfRepetitions);
-                        for (int k=0;k<INDEXES_REPETITIONS;k++){
+
+                        int INDEXES_REPETITIONS = (int) Math.pow(2, numberOfRepetitions);
+                        for (int k = 0; k < INDEXES_REPETITIONS; k++) {
                             List<State> newPathWithSelfLoops = new LinkedList<State>(path);
                             LinkedList<Integer> repetitionList = new LinkedList<>(toRepeatIndexes);
                             int previousAdditionsOffset = 0;
-                            for (int l=0;l<toRepeatIndexes.size();l++){
-                                if (BigInteger.valueOf(k).testBit(l)){
+                            for (int l = 0; l < toRepeatIndexes.size(); l++) {
+                                if (BigInteger.valueOf(k).testBit(l)) {
                                     State toRepeateState = path.get(repetitionList.get(l));
-                                    newPathWithSelfLoops.add(repetitionList.get(l)+previousAdditionsOffset,toRepeateState);
+                                    newPathWithSelfLoops.add(repetitionList.get(l) + previousAdditionsOffset, toRepeateState);
                                     previousAdditionsOffset++;
                                 }
                             }
@@ -412,30 +609,30 @@ public class Generex implements Iterable {
                         }
 
                         /*
-                        if (!statesToBeAdded.isEmpty()) {
-                            List<State> newPathWithSelfLoops = new LinkedList<State>(path);
+                         if (!statesToBeAdded.isEmpty()) {
+                         List<State> newPathWithSelfLoops = new LinkedList<State>(path);
 
-                            while (!statesToBeAdded.isEmpty()) {
-                                State sl = statesToBeAdded.get(0);
-                                int matches = 0;
-                                List<Integer> toInsertIndexes = new LinkedList<>();
+                         while (!statesToBeAdded.isEmpty()) {
+                         State sl = statesToBeAdded.get(0);
+                         int matches = 0;
+                         List<Integer> toInsertIndexes = new LinkedList<>();
 
-                                for (int k = 0; k < newPathWithSelfLoops.size(); k++) {
-                                    if (newPathWithSelfLoops.get(k).equals(sl)) {
-                                        toInsertIndexes.add(k + matches);
-                                        matches++;
-                                    }
-                                }
+                         for (int k = 0; k < newPathWithSelfLoops.size(); k++) {
+                         if (newPathWithSelfLoops.get(k).equals(sl)) {
+                         toInsertIndexes.add(k + matches);
+                         matches++;
+                         }
+                         }
 
-                                toInsertIndexes.stream().forEach((k) -> {
-                                    newPathWithSelfLoops.add(k, sl);
-                                });
+                         toInsertIndexes.stream().forEach((k) -> {
+                         newPathWithSelfLoops.add(k, sl);
+                         });
 
-                                statesToBeAdded.remove(sl);
-                            }
+                         statesToBeAdded.remove(sl);
+                         }
 
-                            newPathsWithSelfLoops.add(newPathWithSelfLoops);
-                        }*/
+                         newPathsWithSelfLoops.add(newPathWithSelfLoops);
+                         }*/
                     }
                 }
 

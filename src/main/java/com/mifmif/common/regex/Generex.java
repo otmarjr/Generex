@@ -363,24 +363,25 @@ public class Generex implements Iterable {
     private List<List<Transition>> getAllFeasiblePermutations() {
         List<List<Transition>> allPerms = this.getAllPermutations();
 
-        List<List<Transition>> permsEmanatiningFromInitialState = allPerms
-                .stream().filter(perm-> perm.size() > 0 && automaton.getInitialState().getTransitions().contains(perm.get(0)))
-                .collect(Collectors.toList());
         
-        List<List<Transition>> knownGood = permsEmanatiningFromInitialState
-                .stream().filter(perm -> perm.size() == 5)
-                .filter(perm -> automaton.getAcceptStates().contains(perm.get(perm.size()-1).getDest()))
-                .collect(Collectors.toList());
+        List<List<Transition>> allFeasiable = new LinkedList<>();
         
-        return allPerms.stream()
-                .filter(tl -> listOfTransitionsIsFeasible(tl))
-                .collect(Collectors.toList());
+        for (List<Transition> permutation : allPerms){
+            if (listOfTransitionsIsFeasible(permutation)){
+                allFeasiable.add(permutation);
+            }
+        }
+        
+        return allFeasiable;
     }
 
     private State getTransitionSource(Transition t){
         for (State s : automaton.getStates()){
-            if (s.getTransitions().contains(t))
-                return s;
+            for (Transition tPrime : s.getTransitions()){
+                if (tPrime == t){
+                    return s;
+                }
+            }
         }
         
         return null;

@@ -244,7 +244,7 @@ public class Generex implements Iterable {
      public Set<String> getAllMatchedStringsViaStatePermutations() {
         Set<String> accStrings = new HashSet<>();
         
-        long maximumStringLength = Math.round(this.automaton.getNumberOfStates()*1.5);
+        long maximumStringLength = Math.round(this.automaton.getNumberOfStates()*2.0);
         
         for (int i=1;i<=maximumStringLength;i++){
             accStrings.addAll(automaton.getStrings(i).stream().map(str -> str.trim()).collect(Collectors.toSet()));
